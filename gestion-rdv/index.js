@@ -2,9 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const userRoutes = require("./routes/userroutes");
+const appointmentRoutes = require("./routes/AppointmentsRoutes");
 
 const app = express();
 app.use(express.json());
+app.use("/api/appointments", appointmentRoutes);
 
 //  Middleware pour log des requêtes
 app.use((req, res, next) => {

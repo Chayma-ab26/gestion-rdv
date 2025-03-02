@@ -4,9 +4,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const router = express.Router();
-const SECRET_KEY = "votre_cle_secrete"; // 🔐 À remplacer par une clé plus sécurisée
+const SECRET_KEY = "votre_cle_secrete"; //  À remplacer par une clé plus sécurisée
 
-// 🔹 Route pour récupérer tous les utilisateurs
+//  Route pour récupérer tous les utilisateurs
 router.get("/", async (req, res) => {
     try {
         const users = await User.find();
@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-// 🔹 Route pour récupérer un utilisateur par ID
+//  Route pour récupérer un utilisateur par ID
 router.get("/:id", async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -29,7 +29,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// 🔹 Route pour créer un nouvel utilisateur avec mot de passe hashé (Signup)
+//  Route pour créer un nouvel utilisateur avec mot de passe hashé (Signup)
 router.post("/signup", async (req, res) => {
     try {
         console.log("Données reçues:", req.body); // Debugging
@@ -75,7 +75,7 @@ router.post("/signup", async (req, res) => {
 });
 
 
-// 🔹 Route pour authentifier un utilisateur (Login)
+//  Route pour authentifier un utilisateur (Login)
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -127,7 +127,7 @@ router.put("/:id", async (req, res) => {
 });
 
 
-// 🔹 Route pour supprimer un utilisateur
+//  Route pour supprimer un utilisateur
 router.delete("/:id", async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -143,5 +143,5 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-// 🔹 Exportation des routes
+//  Exportation des routes
 module.exports = router;
