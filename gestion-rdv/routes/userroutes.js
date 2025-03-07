@@ -43,7 +43,7 @@ router.post("/signup", async (req, res) => {
         }
 
         // Vérifier si le rôle est valide
-        const validRoles = ["admin", "patient", "doctor"];
+        const validRoles = [ "patient", "doctor"];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ message: "Rôle invalide" });
         }
