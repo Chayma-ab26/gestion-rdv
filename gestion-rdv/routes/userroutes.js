@@ -30,20 +30,20 @@ router.get("/:id", async (req, res) => {
 });
 
 //  Route pour créer un nouvel utilisateur avec mot de passe hashé (Signup)
-router.post("/signup", async (req, res) => {
+router.post("/register", async (req, res) => {
     try {
-        console.log("Données reçues:", req.body); // Debugging
+        console.log("Données reçues:", req.body);
 
-        const { fullName, email, password, phone, age, role } = req.body;
+        const { name, email, password, role } = req.body;
 
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "Cet utilisateur existe déjà" });
+            return res.status(400).json({ message: "Cet email est déjà utilisé" });
         }
 
         // Vérifier si le rôle est valide
-        const validRoles = [ "patient", "doctor"];
+        const validRoles = ["client", "professional"];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ message: "Rôle invalide" });
         }
@@ -53,27 +53,34 @@ router.post("/signup", async (req, res) => {
 
         // Création de l'utilisateur
         const newUser = await User.create({
-            fullName,
+            name,
             email,
-            phone,
-            age,
             role,
-            password: hashedPassword,
+            password: hashedPassword
         });
 
         // Générer un token JWT
         const token = jwt.sign(
             { id: newUser._id, email: newUser.email, role: newUser.role },
             SECRET_KEY,
-            { expiresIn: "1h" }
+            { expiresIn: "24h" }
         );
 
-        res.status(201).json({ user: newUser, token });
+        res.status(201).json({ 
+            message: "Inscription réussie",
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role
+            }, 
+            token 
+        });
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("Erreur d'inscription:", err);
+        res.status(400).json({ message: "Erreur lors de l'inscription" });
     }
 });
-
 
 //  Route pour authentifier un utilisateur (Login)
 router.post("/login", async (req, res) => {
@@ -105,7 +112,6 @@ router.post("/login", async (req, res) => {
     }
 });
 
-
 router.put("/:id", async (req, res) => {
     console.log("Données reçues:", req.body); // 🔍 Debugging
 
@@ -125,7 +131,6 @@ router.put("/:id", async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
 
 //  Route pour supprimer un utilisateur
 router.delete("/:id", async (req, res) => {

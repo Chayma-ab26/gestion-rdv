@@ -3,23 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connexion</title>
+    <title>Gestion de Rendez-vous</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="text-center">Connexion</h2>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">GestionRDV</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item" id="loginNav">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-sign-in-alt"></i> Connexion
+                        </a>
+                    </li>
+                    <li class="nav-item" id="registerNav">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                            <i class="fas fa-user-plus"></i> Inscription
+                        </a>
+                    </li>
+                    <li class="nav-item d-none" id="dashboardNav">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-columns"></i> Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item d-none" id="logoutNav">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-        <div class="mb-3">
-            <input type="email" id="email" class="form-control" placeholder="Email">
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>Bienvenue sur GestionRDV</h1>
+                <p class="lead">
+                    Simplifiez la gestion de vos rendez-vous avec notre plateforme intuitive.
+                    Connectez-vous avec des professionnels qualifiés et gérez vos rendez-vous en quelques clics.
+                </p>
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        Commencer maintenant
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <input type="password" id="password" class="form-control" placeholder="Mot de passe">
-        </div>
-        <button class="btn btn-primary" onclick="login()">Se connecter</button>
-        <p class="mt-3">Pas encore inscrit ? <a href="signup.html">Créer un compte</a></p>
     </div>
 
+    <!-- Modal Connexion -->
+    <div class="modal fade" id="loginModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Mot de passe">
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="login()">Se connecter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Inscription -->
+    <div class="modal fade" id="registerModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inscription</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" id="registerName" class="form-control" placeholder="Nom complet">
+                    </div>
+                    <div class="mb-3">
+                        <input type="email" id="registerEmail" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" id="registerPassword" class="form-control" placeholder="Mot de passe">
+                    </div>
+                    <div class="mb-3">
+                        <select id="registerRole" class="form-control">
+                            <option value="">Sélectionnez votre rôle</option>
+                            <option value="client">Client</option>
+                            <option value="professional">Professionnel</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="register()">S'inscrire</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
