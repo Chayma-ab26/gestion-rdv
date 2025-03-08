@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liste des Professionnels - GestionRDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .professional-card {
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+        .professional-card:hover {
+            transform: translateY(-5px);
+        }
+        .availability-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .calendar-day {
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .calendar-day.available {
+            background-color: #d4edda;
+        }
+        .calendar-day.unavailable {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.html">GestionRDV</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="choose-professional-type.html">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-columns"></i> Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="mb-4" id="pageTitle">Liste des professionnels</h2>
+                
+                <!-- Filtres -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="searchName" placeholder="Rechercher par nom...">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="searchLocation" placeholder="Rechercher par ville...">
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                                    <i class="fas fa-search"></i> Rechercher
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des professionnels -->
+                <div id="professionalsList" class="row">
+                    <!-- Les professionnels seront ajoutés ici dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Prise de Rendez-vous -->
+    <div class="modal fade" id="appointmentModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prendre un rendez-vous</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" id="appointmentDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Heure</label>
+                        <select class="form-control" id="appointmentTime">
+                            <!-- Les horaires seront ajoutés dynamiquement -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motif du rendez-vous</label>
+                        <textarea class="form-control" id="appointmentReason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="bookAppointment()">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Variables globales
+        let selectedProfessionalId = null;
+        let professionals = [];
+
+        // Fonction pour récupérer le type de professionnel depuis l'URL
+        function getProfessionalType() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('type');
+        }
+
+        // Fonction pour charger les professionnels
+        async function loadProfessionals() {
+            try {
+                const type = getProfessionalType();
+                if (!type) {
+                    throw new Error('Type de professionnel non spécifié');
+                }
+
+                // Vérifier si l'utilisateur est connecté
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Convertir le type pour correspondre à l'enum dans le modèle
+                const specialtyMap = {
+                    'medecin': 'médecin',
+                    'coach': 'coach',
+                    'avocat': 'avocat',
+                    'psychologue': 'psychologue',
+                    'dentiste': 'dentiste',
+                    'kinesitherapeute': 'kinésithérapeute'
+                };
+
+                const specialty = specialtyMap[type.toLowerCase()] || type;
+                console.log('Recherche des professionnels de type:', specialty);
+
+                const response = await fetch(`/api/users/professionals/list?specialty=${encodeURIComponent(specialty)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Erreur lors du chargement des professionnels');
+                }
+                
+                professionals = await response.json();
+                if (professionals.length === 0) {
+                    document.getElementById('professionalsList').innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Aucun professionnel disponible pour cette spécialité.
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    displayProfessionals(professionals);
+                }
+                
+                // Mise à jour du titre de la page
+                document.getElementById('pageTitle').textContent = `Liste des ${type}s`;
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('professionalsList').innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Fonction pour afficher les professionnels
+        function displayProfessionals(professionals) {
+            const container = document.getElementById('professionalsList');
+            container.innerHTML = '';
+
+            professionals.forEach(professional => {
+                const card = document.createElement('div');
+                card.className = 'col-md-6 professional-card';
+                card.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">Dr ${professional.firstName} ${professional.lastName}</h5>
+                                    <p class="card-text">
+                                        <i class="fas fa-map-marker-alt text-primary"></i> ${professional.address}
+                                    </p>
+                                </div>
+                                <button class="btn btn-primary" onclick="openAppointmentModal('${professional._id}')">
+                                    Prendre rendez-vous
+                                </button>
+                            </div>
+                            <div class="availability-calendar">
+                                ${generateAvailabilityCalendar(professional.availability)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Fonction pour générer le calendrier de disponibilités
+        function generateAvailabilityCalendar(availability) {
+            const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+            return days.map(day => {
+                const isAvailable = availability.days.includes(day);
+                return `
+                    <div class="calendar-day ${isAvailable ? 'available' : 'unavailable'}">
+                        ${day}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Fonction pour ouvrir le modal de prise de rendez-vous
+        function openAppointmentModal(professionalId) {
+            selectedProfessionalId = professionalId;
+            const professional = professionals.find(p => p._id === professionalId);
+            
+            // Réinitialiser le formulaire
+            document.getElementById('appointmentDate').value = '';
+            document.getElementById('appointmentTime').innerHTML = '';
+            document.getElementById('appointmentReason').value = '';
+            
+            // Afficher le modal
+            const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+            modal.show();
+        }
+
+        // Fonction pour réserver un rendez-vous
+        async function bookAppointment() {
+            try {
+                const date = document.getElementById('appointmentDate').value;
+                const time = document.getElementById('appointmentTime').value;
+                const reason = document.getElementById('appointmentReason').value;
+
+                if (!date || !time || !reason) {
+                    alert('Veuillez remplir tous les champs');
+                    return;
+                }
+
+                const response = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        doctor: selectedProfessionalId,
+                        date: `${date}T${time}`,
+                        reason: reason
+                    })
+                });
+
+                if (!response.ok) throw new Error('Erreur lors de la création du rendez-vous');
+
+                alert('Rendez-vous créé avec succès !');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la création du rendez-vous');
+            }
+        }
+
+        // Fonction pour appliquer les filtres
+        function applyFilters() {
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const searchLocation = document.getElementById('searchLocation').value.toLowerCase();
+
+            const filteredProfessionals = professionals.filter(professional => {
+                const fullName = `${professional.firstName} ${professional.lastName}`.toLowerCase();
+                const location = professional.address.toLowerCase();
+
+                return fullName.includes(searchName) && location.includes(searchLocation);
+            });
+
+            displayProfessionals(filteredProfessionals);
+        }
+
+        // Charger les professionnels au chargement de la page
+        document.addEventListener('DOMContentLoaded', loadProfessionals);
+    </script>
+</body>
+</html>

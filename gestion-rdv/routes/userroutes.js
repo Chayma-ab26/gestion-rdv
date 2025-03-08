@@ -1,35 +1,13 @@
 const express = require("express");
-const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
-const SECRET_KEY = "votre_cle_secrete"; //  À remplacer par une clé plus sécurisée
+const SECRET_KEY = "votre_cle_secrete";
 
-//  Route pour récupérer tous les utilisateurs
-router.get("/", async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-//  Route pour récupérer un utilisateur par ID
-router.get("/:id", async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "Utilisateur non trouvé" });
-        }
-        res.json(user);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// 🔹 Inscription
+// Routes publiques
 router.post("/signup", async (req, res) => {
     try {
         const {
@@ -110,7 +88,6 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// 🔹 Connexion
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -151,7 +128,54 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.put("/:id", async (req, res) => {
+// Routes protégées
+const protectedRouter = express.Router();
+protectedRouter.use(auth);
+
+// Route pour récupérer les professionnels
+protectedRouter.get("/professionals/list", async (req, res) => {
+    try {
+        const { specialty } = req.query;
+        const query = { role: "professional" };
+        
+        if (specialty) {
+            query.specialty = specialty;
+        }
+
+        const professionals = await User.find(query)
+            .select('firstName lastName address specialty availability');
+
+        res.json(professionals);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Route pour récupérer tous les utilisateurs
+protectedRouter.get("/", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Route pour récupérer un utilisateur par ID
+protectedRouter.get("/:id", async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé" });
+        }
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Route pour mettre à jour un utilisateur
+protectedRouter.put("/:id", async (req, res) => {
     console.log("Données reçues:", req.body); // 🔍 Debugging
 
     if (!Object.keys(req.body).length) {
@@ -171,8 +195,8 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-//  Route pour supprimer un utilisateur
-router.delete("/:id", async (req, res) => {
+// Route pour supprimer un utilisateur
+protectedRouter.delete("/:id", async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
@@ -187,5 +211,7 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-//  Exportation des routes
+// Ajouter les routes protégées au router principal
+router.use(protectedRouter);
+
 module.exports = router;
