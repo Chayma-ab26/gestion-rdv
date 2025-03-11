@@ -49,9 +49,44 @@ const userSchema = new mongoose.Schema({
         required: function() { return this.role === "professional"; }
     },
     availability: {
-        days: [String],
-        startTime: String,
-        endTime: String
+        workingDays: {
+            type: [String],
+            enum: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
+            default: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"]
+        },
+        workingHours: {
+            start: {
+                type: String,
+                default: "09:00"
+            },
+            end: {
+                type: String,
+                default: "17:00"
+            }
+        },
+        slotDuration: {
+            type: Number, // durée en minutes
+            default: 15
+        },
+        breakTime: {
+            start: {
+                type: String,
+                default: "12:00"
+            },
+            end: {
+                type: String,
+                default: "13:00"
+            }
+        },
+        exceptions: [{
+            date: Date,
+            type: {
+                type: String,
+                enum: ["unavailable", "available"],
+                default: "unavailable"
+            },
+            reason: String
+        }]
     }
 }, { 
     timestamps: true 

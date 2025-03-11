@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentUser.role === 'professional') {
         document.querySelector('.professional-section').classList.remove('d-none');
         document.querySelector('.client-section').classList.add('d-none');
-        loadProfessionalDashboard();
+        await loadProfessionalDashboard();
     } else {
         await loadProfessionals();
     }
@@ -196,19 +196,26 @@ async function createAppointment() {
                 'Authorization': `Bearer ${getToken()}`
             },
             body: JSON.stringify({
-                professional,
-                date: dateTime,
-                reason,
-                patient: currentUser._id
+                doctor: professional, 
+                date: dateTime.toISOString(),
+                reason
             })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('newAppointmentModal'));
-            modal.hide();
+            alert('Rendez-vous créé avec succès');
             await loadAppointments();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newAppointmentModal'));
+            if (modal) {
+                modal.hide();
+            }
+            // Réinitialiser le formulaire
+            document.getElementById('professionalSelect').value = '';
+            document.getElementById('appointmentDate').value = '';
+            document.getElementById('appointmentTime').value = '';
+            document.getElementById('appointmentReason').value = '';
         } else {
             alert(data.message || 'Erreur lors de la création du rendez-vous');
         }
@@ -218,17 +225,83 @@ async function createAppointment() {
     }
 }
 
-// Mise à jour des disponibilités (pour les professionnels)
+// Chargement du tableau de bord professionnel
+async function loadProfessionalDashboard() {
+    try {
+        // Charger les disponibilités actuelles
+        const response = await fetch('/api/users/' + currentUser.id, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Mettre à jour les jours cochés
+            const days = {
+                'Lundi': 'btnLundi',
+                'Mardi': 'btnMardi',
+                'Mercredi': 'btnMercredi',
+                'Jeudi': 'btnJeudi',
+                'Vendredi': 'btnVendredi'
+            };
+            
+            for (const [day, buttonId] of Object.entries(days)) {
+                const checkbox = document.getElementById(buttonId);
+                if (checkbox) {
+                    checkbox.checked = data.availability.workingDays.includes(day);
+                }
+            }
+            
+            // Mettre à jour les horaires
+            if (data.availability.workingHours) {
+                document.getElementById('startTime').value = data.availability.workingHours.start;
+                document.getElementById('endTime').value = data.availability.workingHours.end;
+            }
+            
+            // Mettre à jour la pause déjeuner
+            if (data.availability.breakTime) {
+                document.getElementById('breakStartTime').value = data.availability.breakTime.start;
+                document.getElementById('breakEndTime').value = data.availability.breakTime.end;
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des disponibilités:', error);
+        alert('Erreur lors du chargement des disponibilités');
+    }
+}
+
+// Mise à jour des disponibilités
 async function updateAvailability() {
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].filter(day => 
-        document.getElementById(`btn${day}`).checked
-    );
+    const workingDays = [];
+    const days = {
+        'btnLundi': 'Lundi',
+        'btnMardi': 'Mardi',
+        'btnMercredi': 'Mercredi',
+        'btnJeudi': 'Jeudi',
+        'btnVendredi': 'Vendredi'
+    };
+    
+    for (const [buttonId, day] of Object.entries(days)) {
+        const checkbox = document.getElementById(buttonId);
+        if (checkbox && checkbox.checked) {
+            workingDays.push(day);
+        }
+    }
     
     const startTime = document.getElementById('startTime').value;
     const endTime = document.getElementById('endTime').value;
-
+    const breakStartTime = document.getElementById('breakStartTime')?.value || '12:00';
+    const breakEndTime = document.getElementById('breakEndTime')?.value || '14:00';
+    
+    if (!startTime || !endTime) {
+        alert('Veuillez remplir les horaires de travail');
+        return;
+    }
+    
     try {
-        const response = await fetch('/api/users/availability', {
+        const response = await fetch('/api/users/' + currentUser.id, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -236,17 +309,24 @@ async function updateAvailability() {
             },
             body: JSON.stringify({
                 availability: {
-                    days,
-                    startTime,
-                    endTime
+                    workingDays,
+                    workingHours: {
+                        start: startTime,
+                        end: endTime
+                    },
+                    breakTime: {
+                        start: breakStartTime,
+                        end: breakEndTime
+                    }
                 }
             })
         });
-
+        
+        const data = await response.json();
+        
         if (response.ok) {
             alert('Disponibilités mises à jour avec succès');
         } else {
-            const data = await response.json();
             alert(data.message || 'Erreur lors de la mise à jour des disponibilités');
         }
     } catch (error) {

@@ -89,18 +89,33 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Horaires</label>
+                            <label class="form-label">Horaires de travail</label>
                             <div class="row">
                                 <div class="col">
+                                    <label class="form-label small">Début</label>
                                     <input type="time" class="form-control" id="startTime">
                                 </div>
                                 <div class="col">
+                                    <label class="form-label small">Fin</label>
                                     <input type="time" class="form-control" id="endTime">
                                 </div>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pause déjeuner</label>
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label small">Début</label>
+                                    <input type="time" class="form-control" id="breakStartTime" value="12:00">
+                                </div>
+                                <div class="col">
+                                    <label class="form-label small">Fin</label>
+                                    <input type="time" class="form-control" id="breakEndTime" value="14:00">
+                                </div>
+                            </div>
+                        </div>
                         <button class="btn btn-primary w-100" onclick="updateAvailability()">
-                            Mettre à jour
+                            <i class="fas fa-save me-2"></i>Mettre à jour
                         </button>
                     </div>
                 </div>
